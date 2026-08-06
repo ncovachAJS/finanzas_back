@@ -146,6 +146,29 @@ export class DashboardService {
     const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
     const paidExpenses = expenses.filter((e) => e.isPaid).reduce((s, e) => s + e.amount, 0);
 
+    // Saldo necesario por cuenta al inicio del mes
+    const accountMap = new Map<string, { name: string; total: number; paid: number }>();
+    for (const expense of expenses) {
+      const existing = accountMap.get(expense.account.id);
+      if (existing) {
+        existing.total += expense.amount;
+        if (expense.isPaid) existing.paid += expense.amount;
+      } else {
+        accountMap.set(expense.account.id, {
+          name: expense.account.name,
+          total: expense.amount,
+          paid: expense.isPaid ? expense.amount : 0,
+        });
+      }
+    }
+    const accountBreakdown = Array.from(accountMap.entries()).map(([id, v]) => ({
+      accountId: id,
+      accountName: v.name,
+      totalRequired: Math.round(v.total * 100) / 100,
+      totalPaid: Math.round(v.paid * 100) / 100,
+      pending: Math.round((v.total - v.paid) * 100) / 100,
+    }));
+
     // Budget alert
     const monthlyBudget = user?.monthlyBudget ?? null;
     const budgetUsedFraction = monthlyBudget ? totalExpenses / monthlyBudget : null;
@@ -161,6 +184,7 @@ export class DashboardService {
       paidExpenses,
       pendingExpenses: totalExpenses - paidExpenses,
       available: paidIncomes - paidExpenses,
+      accountBreakdown,
       monthlyBudget,
       budgetUsedFraction,
       budgetAlert,
