@@ -96,6 +96,7 @@ export class DashboardService {
       DEBT:       { label: 'Deuda',           icon: '💳', color: '#EF4444' },
       DONATION:   { label: 'Donación',        icon: '🎁', color: '#EC4899' },
       INVESTMENT: { label: 'Inversión',       icon: '📈', color: '#3B82F6' },
+      SAVINGS:    { label: 'Ahorro',          icon: '🏦', color: '#10B981' },
       OTHER:      { label: 'Otro',            icon: '📦', color: '#6B7280' },
     };
     const expenseTypeBreakdown = Object.entries(expenseTypeMeta).map(([type, meta]) => {

@@ -21,7 +21,8 @@ enum ExpenseType {
   VARIABLE    // Gasto variable (compras, ocio)
   DEBT        // Deuda / préstamo
   DONATION    // Donación
-  INVESTMENT  // Inversión / ahorro
+  INVESTMENT  // Inversión
+  SAVINGS     // Ahorro
   OTHER       // Otro
 }
 
