@@ -68,7 +68,7 @@ export class DashboardService {
       return { accountId: a.id, accountName: a.name, total };
     });
 
-    // Dona por categoría
+    // Dona por categoría (solo si hay gastos con categoría asignada)
     const categoryBreakdown = categories.map((c) => {
       const total = expenses
         .filter((e) => e.categoryId === c.id)
@@ -76,7 +76,6 @@ export class DashboardService {
       return { categoryId: c.id, categoryName: c.name, icon: c.icon, color: c.color, total };
     }).filter((c) => c.total > 0);
 
-    // Sin categoría
     const uncategorizedTotal = expenses
       .filter((e) => !e.categoryId)
       .reduce((s, e) => s + e.amount, 0);
@@ -90,6 +89,22 @@ export class DashboardService {
       });
     }
 
+    // Dona por tipo de gasto
+    const expenseTypeMeta: Record<string, { label: string; icon: string; color: string }> = {
+      FIXED:      { label: 'Gasto fijo',     icon: '🏠', color: '#6366F1' },
+      VARIABLE:   { label: 'Gasto variable',  icon: '🛒', color: '#22C55E' },
+      DEBT:       { label: 'Deuda',           icon: '💳', color: '#EF4444' },
+      DONATION:   { label: 'Donación',        icon: '🎁', color: '#EC4899' },
+      INVESTMENT: { label: 'Inversión',       icon: '📈', color: '#3B82F6' },
+      OTHER:      { label: 'Otro',            icon: '📦', color: '#6B7280' },
+    };
+    const expenseTypeBreakdown = Object.entries(expenseTypeMeta).map(([type, meta]) => {
+      const total = expenses
+        .filter((e) => e.expenseType === type)
+        .reduce((s, e) => s + e.amount, 0);
+      return { expenseType: type, label: meta.label, icon: meta.icon, color: meta.color, total };
+    }).filter((t) => t.total > 0);
+
     return {
       year,
       months,
@@ -98,6 +113,7 @@ export class DashboardService {
       yearTotalExpenses,
       accountBreakdown,
       categoryBreakdown,
+      expenseTypeBreakdown,
       monthlyBudget: user?.monthlyBudget ?? null,
     };
   }
