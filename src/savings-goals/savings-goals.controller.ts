@@ -6,10 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { JwtGuard } from '../auth/guards/jwt.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { SavingsGoalsService } from './savings-goals.service';
 import { CreateSavingsGoalDto } from './dto/create-savings-goal.dto';
 import { UpdateSavingsGoalDto } from './dto/update-savings-goal.dto';
@@ -20,29 +20,22 @@ export class SavingsGoalsController {
   constructor(private readonly service: SavingsGoalsService) {}
 
   @Get()
-  findAll(@CurrentUser('id') userId: string) {
-    return this.service.findAll(userId);
+  findAll(@Request() req) {
+    return this.service.findAll(req.user.id);
   }
 
   @Post()
-  create(
-    @CurrentUser('id') userId: string,
-    @Body() dto: CreateSavingsGoalDto,
-  ) {
-    return this.service.create(userId, dto);
+  create(@Request() req, @Body() dto: CreateSavingsGoalDto) {
+    return this.service.create(req.user.id, dto);
   }
 
   @Patch(':id')
-  update(
-    @CurrentUser('id') userId: string,
-    @Param('id') id: string,
-    @Body() dto: UpdateSavingsGoalDto,
-  ) {
-    return this.service.update(userId, id, dto);
+  update(@Request() req, @Param('id') id: string, @Body() dto: UpdateSavingsGoalDto) {
+    return this.service.update(req.user.id, id, dto);
   }
 
   @Delete(':id')
-  remove(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    return this.service.remove(userId, id);
+  remove(@Request() req, @Param('id') id: string) {
+    return this.service.remove(req.user.id, id);
   }
 }

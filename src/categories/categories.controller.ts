@@ -6,10 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { JwtGuard } from '../auth/guards/jwt.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -20,26 +20,22 @@ export class CategoriesController {
   constructor(private readonly service: CategoriesService) {}
 
   @Get()
-  findAll(@CurrentUser('id') userId: string) {
-    return this.service.findAll(userId);
+  findAll(@Request() req) {
+    return this.service.findAll(req.user.id);
   }
 
   @Post()
-  create(@CurrentUser('id') userId: string, @Body() dto: CreateCategoryDto) {
-    return this.service.create(userId, dto);
+  create(@Request() req, @Body() dto: CreateCategoryDto) {
+    return this.service.create(req.user.id, dto);
   }
 
   @Patch(':id')
-  update(
-    @CurrentUser('id') userId: string,
-    @Param('id') id: string,
-    @Body() dto: UpdateCategoryDto,
-  ) {
-    return this.service.update(userId, id, dto);
+  update(@Request() req, @Param('id') id: string, @Body() dto: UpdateCategoryDto) {
+    return this.service.update(req.user.id, id, dto);
   }
 
   @Delete(':id')
-  remove(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    return this.service.remove(userId, id);
+  remove(@Request() req, @Param('id') id: string) {
+    return this.service.remove(req.user.id, id);
   }
 }
