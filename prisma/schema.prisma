@@ -16,6 +16,15 @@ enum Recurrence {
   ANNUAL
 }
 
+enum ExpenseType {
+  FIXED       // Gasto fijo (alquiler, suscripciones)
+  VARIABLE    // Gasto variable (compras, ocio)
+  DEBT        // Deuda / préstamo
+  DONATION    // Donación
+  INVESTMENT  // Inversión / ahorro
+  OTHER       // Otro
+}
+
 model User {
   id            String        @id @default(uuid())
   name          String
@@ -98,8 +107,9 @@ model Expense {
   year       Int
   accountId  String
   account    Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  categoryId String?
-  category   Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  categoryId  String?
+  category    Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  expenseType ExpenseType @default(VARIABLE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }

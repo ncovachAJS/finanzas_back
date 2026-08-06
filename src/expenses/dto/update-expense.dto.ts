@@ -8,7 +8,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { Recurrence } from '@prisma/client';
+import { Recurrence, ExpenseType } from '@prisma/client';
 
 export class UpdateExpenseDto {
   @IsString()
@@ -40,4 +40,8 @@ export class UpdateExpenseDto {
   @IsUUID()
   @IsOptional()
   categoryId?: string;
+
+  @IsEnum(ExpenseType)
+  @IsOptional()
+  expenseType?: ExpenseType;
 }

@@ -3,7 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { Recurrence } from '@prisma/client';
+import { Recurrence, ExpenseType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
@@ -47,6 +47,7 @@ export class ExpensesService {
         year: dto.year,
         accountId: dto.accountId,
         categoryId: dto.categoryId ?? null,
+        expenseType: dto.expenseType ?? ExpenseType.VARIABLE,
       },
       include: {
         account: { select: { id: true, name: true } },
@@ -118,6 +119,7 @@ export class ExpensesService {
         year,
         accountId: r.accountId,
         categoryId: r.categoryId ?? null,
+        expenseType: r.expenseType ?? ExpenseType.VARIABLE,
       })),
     });
 
