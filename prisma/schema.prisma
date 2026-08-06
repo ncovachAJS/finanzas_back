@@ -17,14 +17,45 @@ enum Recurrence {
 }
 
 model User {
+  id            String        @id @default(uuid())
+  name          String
+  email         String        @unique
+  password      String
+  monthlyBudget Float?        // Presupuesto mensual global de gastos
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  accounts      Account[]
+  incomes       Income[]
+  categories    Category[]
+  savingsGoals  SavingsGoal[]
+}
+
+/// Categoría de gasto (alimentación, transporte, ocio…)
+model Category {
   id        String    @id @default(uuid())
   name      String
-  email     String    @unique
-  password  String
+  icon      String    @default("📦")
+  color     String    @default("#6366F1")
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses  Expense[]
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  accounts  Account[]
-  incomes   Income[]
+
+  @@unique([name, userId])
+}
+
+/// Meta de ahorro con importe objetivo y fecha opcional
+model SavingsGoal {
+  id           String    @id @default(uuid())
+  name         String
+  targetAmount Float
+  savedAmount  Float     @default(0)
+  deadline     DateTime?
+  emoji        String    @default("🎯")
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 /// Agrupa gastos. Nombre libre (ej: "Nómina", "Gastos del hogar").
@@ -55,7 +86,7 @@ model Income {
   updatedAt  DateTime   @updatedAt
 }
 
-/// Gasto perteneciente a una cuenta.
+/// Gasto perteneciente a una cuenta, opcionalmente categorizado.
 model Expense {
   id         String     @id @default(uuid())
   name       String
@@ -67,6 +98,8 @@ model Expense {
   year       Int
   accountId  String
   account    Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  categoryId String?
+  category   Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 }

@@ -24,4 +24,21 @@ export class DashboardController {
       parseInt(year),
     );
   }
+
+  @Get('history')
+  getHistory(
+    @Request() req,
+    @Query('month') month?: string,
+    @Query('year') year?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.dashboardService.getHistory(
+      req.user.id,
+      month ? parseInt(month) : undefined,
+      year ? parseInt(year) : undefined,
+      limit ? parseInt(limit) : 50,
+      offset ? parseInt(offset) : 0,
+    );
+  }
 }

@@ -32,4 +32,12 @@ export class UpdateExpenseDto {
   @IsUUID()
   @IsOptional()
   accountId?: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
+
+  @IsUUID()
+  @IsOptional()
+  categoryId?: string;
 }

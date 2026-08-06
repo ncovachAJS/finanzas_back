@@ -26,7 +26,10 @@ export class ExpensesService {
         ...(month !== undefined && { month }),
         ...(year !== undefined && { year }),
       },
-      include: { account: { select: { id: true, name: true } } },
+      include: {
+        account: { select: { id: true, name: true } },
+        category: { select: { id: true, name: true, icon: true, color: true } },
+      },
       orderBy: { createdAt: 'asc' },
     });
   }
@@ -43,8 +46,12 @@ export class ExpensesService {
         month: dto.month,
         year: dto.year,
         accountId: dto.accountId,
+        categoryId: dto.categoryId ?? null,
       },
-      include: { account: { select: { id: true, name: true } } },
+      include: {
+        account: { select: { id: true, name: true } },
+        category: { select: { id: true, name: true, icon: true, color: true } },
+      },
     });
   }
 
@@ -56,7 +63,10 @@ export class ExpensesService {
     return this.prisma.expense.update({
       where: { id },
       data: dto,
-      include: { account: { select: { id: true, name: true } } },
+      include: {
+        account: { select: { id: true, name: true } },
+        category: { select: { id: true, name: true, icon: true, color: true } },
+      },
     });
   }
 
@@ -107,6 +117,7 @@ export class ExpensesService {
         month,
         year,
         accountId: r.accountId,
+        categoryId: r.categoryId ?? null,
       })),
     });
 

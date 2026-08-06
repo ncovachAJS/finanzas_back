@@ -44,4 +44,8 @@ export class CreateExpenseDto {
 
   @IsUUID()
   accountId: string;
+
+  @IsUUID()
+  @IsOptional()
+  categoryId?: string;
 }

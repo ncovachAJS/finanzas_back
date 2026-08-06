@@ -5,20 +5,28 @@ import { PrismaService } from '../prisma/prisma.service';
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /// Stats anuales: por mes, totales y dona por cuenta.
+  /// Stats anuales: por mes, totales, dona por cuenta y por categoría.
   async getYearStats(userId: string, year: number) {
-    const [incomes, expenses, accounts] = await Promise.all([
+    const [incomes, expenses, accounts, categories, user] = await Promise.all([
       this.prisma.income.findMany({ where: { userId, year } }),
       this.prisma.expense.findMany({
-        where: {
-          account: { userId },
-          year,
+        where: { account: { userId }, year },
+        include: {
+          account: { select: { id: true, name: true } },
+          category: { select: { id: true, name: true, icon: true, color: true } },
         },
-        include: { account: { select: { id: true, name: true } } },
       }),
       this.prisma.account.findMany({
         where: { userId },
         select: { id: true, name: true },
+      }),
+      this.prisma.category.findMany({
+        where: { userId },
+        select: { id: true, name: true, icon: true, color: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { monthlyBudget: true },
       }),
     ]);
 
@@ -44,25 +52,43 @@ export class DashboardService {
         totalExpenses,
         paidExpenses,
         pendingExpenses: totalExpenses - paidExpenses,
-        // Ahorro del mes = cobrado - pagado
         savings: paidIncomes - paidExpenses,
       };
     });
 
-    // Ahorro acumulado año
     const accumulatedSavings = months.reduce((s, m) => s + m.savings, 0);
-
-    // Totales año
     const yearTotalIncomes = incomes.reduce((s, i) => s + i.amount, 0);
     const yearTotalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
 
-    // Dona: peso de cada cuenta en el total de gastos del año
+    // Dona por cuenta
     const accountBreakdown = accounts.map((a) => {
       const total = expenses
         .filter((e) => e.account.id === a.id)
         .reduce((s, e) => s + e.amount, 0);
       return { accountId: a.id, accountName: a.name, total };
     });
+
+    // Dona por categoría
+    const categoryBreakdown = categories.map((c) => {
+      const total = expenses
+        .filter((e) => e.categoryId === c.id)
+        .reduce((s, e) => s + e.amount, 0);
+      return { categoryId: c.id, categoryName: c.name, icon: c.icon, color: c.color, total };
+    }).filter((c) => c.total > 0);
+
+    // Sin categoría
+    const uncategorizedTotal = expenses
+      .filter((e) => !e.categoryId)
+      .reduce((s, e) => s + e.amount, 0);
+    if (uncategorizedTotal > 0) {
+      categoryBreakdown.push({
+        categoryId: null,
+        categoryName: 'Sin categoría',
+        icon: '📦',
+        color: '#6B7280',
+        total: uncategorizedTotal,
+      });
+    }
 
     return {
       year,
@@ -71,27 +97,37 @@ export class DashboardService {
       yearTotalIncomes,
       yearTotalExpenses,
       accountBreakdown,
+      categoryBreakdown,
+      monthlyBudget: user?.monthlyBudget ?? null,
     };
   }
 
-  /// Stats del mes actual: detalle cobrado/pendiente, pagado/pendiente.
+  /// Stats del mes: detalle cobrado/pendiente, breakdown por categoría, alerta presupuesto.
   async getMonthStats(userId: string, month: number, year: number) {
-    const [incomes, expenses] = await Promise.all([
+    const [incomes, expenses, user] = await Promise.all([
       this.prisma.income.findMany({ where: { userId, month, year } }),
       this.prisma.expense.findMany({
         where: { account: { userId }, month, year },
-        include: { account: { select: { id: true, name: true } } },
+        include: {
+          account: { select: { id: true, name: true } },
+          category: { select: { id: true, name: true, icon: true, color: true } },
+        },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { monthlyBudget: true },
       }),
     ]);
 
     const totalIncomes = incomes.reduce((s, i) => s + i.amount, 0);
-    const paidIncomes = incomes
-      .filter((i) => i.isPaid)
-      .reduce((s, i) => s + i.amount, 0);
+    const paidIncomes = incomes.filter((i) => i.isPaid).reduce((s, i) => s + i.amount, 0);
     const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-    const paidExpenses = expenses
-      .filter((e) => e.isPaid)
-      .reduce((s, e) => s + e.amount, 0);
+    const paidExpenses = expenses.filter((e) => e.isPaid).reduce((s, e) => s + e.amount, 0);
+
+    // Budget alert
+    const monthlyBudget = user?.monthlyBudget ?? null;
+    const budgetUsedFraction = monthlyBudget ? totalExpenses / monthlyBudget : null;
+    const budgetAlert = monthlyBudget && totalExpenses >= monthlyBudget * 0.85;
 
     return {
       month,
@@ -102,8 +138,87 @@ export class DashboardService {
       totalExpenses,
       paidExpenses,
       pendingExpenses: totalExpenses - paidExpenses,
-      // Lo que queda = cobrado - pagado
       available: paidIncomes - paidExpenses,
+      monthlyBudget,
+      budgetUsedFraction,
+      budgetAlert,
     };
+  }
+
+  /// Historial unificado: todos los movimientos del usuario, con filtros opcionales.
+  async getHistory(
+    userId: string,
+    month?: number,
+    year?: number,
+    limit = 50,
+    offset = 0,
+  ) {
+    const [incomes, expenses] = await Promise.all([
+      this.prisma.income.findMany({
+        where: {
+          userId,
+          ...(month !== undefined && { month }),
+          ...(year !== undefined && { year }),
+        },
+        orderBy: [{ year: 'desc' }, { month: 'desc' }, { createdAt: 'desc' }],
+      }),
+      this.prisma.expense.findMany({
+        where: {
+          account: { userId },
+          ...(month !== undefined && { month }),
+          ...(year !== undefined && { year }),
+        },
+        include: {
+          account: { select: { id: true, name: true } },
+          category: { select: { id: true, name: true, icon: true, color: true } },
+        },
+        orderBy: [{ year: 'desc' }, { month: 'desc' }, { createdAt: 'desc' }],
+      }),
+    ]);
+
+    // Mezcla y ordena por fecha de creación desc
+    const items = [
+      ...incomes.map((i) => ({
+        id: i.id,
+        type: 'income' as const,
+        name: i.name,
+        amount: i.amount,
+        isPaid: i.isPaid,
+        recurrence: i.recurrence,
+        notes: i.notes,
+        month: i.month,
+        year: i.year,
+        createdAt: i.createdAt,
+        accountName: null,
+        categoryName: null,
+        categoryIcon: null,
+        categoryColor: null,
+      })),
+      ...expenses.map((e) => ({
+        id: e.id,
+        type: 'expense' as const,
+        name: e.name,
+        amount: e.amount,
+        isPaid: e.isPaid,
+        recurrence: e.recurrence,
+        notes: e.notes,
+        month: e.month,
+        year: e.year,
+        createdAt: e.createdAt,
+        accountName: e.account.name,
+        categoryName: e.category?.name ?? null,
+        categoryIcon: e.category?.icon ?? null,
+        categoryColor: e.category?.color ?? null,
+      })),
+    ].sort((a, b) => {
+      if (b.year !== a.year) return b.year - a.year;
+      if (b.month !== a.month) return b.month - a.month;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+
+    const total = items.length;
+    const paginated = items.slice(offset, offset + limit);
+
+    return { total, items: paginated };
   }
 }
