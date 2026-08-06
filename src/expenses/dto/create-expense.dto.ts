@@ -58,4 +58,9 @@ export class CreateExpenseDto {
   @Min(1)
   @IsOptional()
   cuotaNumber?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  totalCuotas?: number;
 }

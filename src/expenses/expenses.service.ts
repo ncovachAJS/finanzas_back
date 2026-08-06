@@ -49,6 +49,7 @@ export class ExpensesService {
         categoryId: dto.categoryId ?? null,
         expenseType: dto.expenseType ?? ExpenseType.VARIABLE,
         cuotaNumber: dto.cuotaNumber ?? null,
+        totalCuotas: dto.totalCuotas ?? null,
       },
       include: {
         account: { select: { id: true, name: true } },
@@ -122,6 +123,7 @@ export class ExpensesService {
         categoryId: r.categoryId ?? null,
         expenseType: r.expenseType ?? ExpenseType.VARIABLE,
         cuotaNumber: r.cuotaNumber != null ? r.cuotaNumber + 1 : null,
+        totalCuotas: r.totalCuotas ?? null,
       })),
     });
 

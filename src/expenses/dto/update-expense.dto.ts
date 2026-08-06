@@ -50,4 +50,9 @@ export class UpdateExpenseDto {
   @Min(1)
   @IsOptional()
   cuotaNumber?: number | null;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  totalCuotas?: number | null;
 }
