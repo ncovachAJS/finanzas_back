@@ -59,6 +59,9 @@ export class DashboardService {
     const accumulatedSavings = months.reduce((s, m) => s + m.savings, 0);
     const yearTotalIncomes = incomes.reduce((s, i) => s + i.amount, 0);
     const yearTotalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+    // Solo lo realmente cobrado/pagado (coincide con accumulatedSavings)
+    const yearPaidIncomes = incomes.filter((i) => i.isPaid).reduce((s, i) => s + i.amount, 0);
+    const yearPaidExpenses = expenses.filter((e) => e.isPaid).reduce((s, e) => s + e.amount, 0);
 
     // Dona por cuenta
     const accountBreakdown = accounts.map((a) => {
@@ -112,6 +115,8 @@ export class DashboardService {
       accumulatedSavings,
       yearTotalIncomes,
       yearTotalExpenses,
+      yearPaidIncomes,
+      yearPaidExpenses,
       accountBreakdown,
       categoryBreakdown,
       expenseTypeBreakdown,
