@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Recurrence {
+  NONE
+  MONTHLY
+  BIMONTHLY
+  QUARTERLY
+  SEMIANNUAL
+  ANNUAL
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  accounts  Account[]
+  incomes   Income[]
+}
+
+/// Agrupa gastos. Nombre libre (ej: "Nómina", "Gastos del hogar").
+model Account {
+  id        String    @id @default(uuid())
+  name      String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses  Expense[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+/// Ingreso suelto, sin cuenta. El check se renueva cada ciclo.
+model Income {
+  id         String     @id @default(uuid())
+  name       String
+  amount     Float
+  recurrence Recurrence @default(NONE)
+  isPaid     Boolean    @default(false)
+  month      Int        // 1-12
+  year       Int
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+/// Gasto perteneciente a una cuenta.
+model Expense {
+  id         String     @id @default(uuid())
+  name       String
+  amount     Float
+  recurrence Recurrence @default(NONE)
+  isPaid     Boolean    @default(false)
+  month      Int        // 1-12
+  year       Int
+  accountId  String
+  account    Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
