@@ -34,7 +34,7 @@ export class AccountsService {
 
   async create(userId: string, dto: CreateAccountDto) {
     return this.prisma.account.create({
-      data: { name: dto.name, userId },
+      data: { name: dto.name, budget: dto.budget ?? null, userId },
     });
   }
 
@@ -42,7 +42,11 @@ export class AccountsService {
     await this.checkOwnership(userId, id);
     return this.prisma.account.update({
       where: { id },
-      data: { name: dto.name },
+      data: {
+        ...(dto.name !== undefined && { name: dto.name }),
+        // null borra el presupuesto; undefined lo deja intacto
+        ...(dto.budget !== undefined && { budget: dto.budget === 0 ? null : dto.budget }),
+      },
     });
   }
 

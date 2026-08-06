@@ -29,6 +29,10 @@ export class CreateExpenseDto {
   @IsOptional()
   isPaid?: boolean;
 
+  @IsString()
+  @IsOptional()
+  notes?: string;
+
   @IsInt()
   @Min(1)
   @Max(12)
