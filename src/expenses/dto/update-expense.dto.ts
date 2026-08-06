@@ -1,6 +1,7 @@
 import {
   IsBoolean,
   IsEnum,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
@@ -44,4 +45,9 @@ export class UpdateExpenseDto {
   @IsEnum(ExpenseType)
   @IsOptional()
   expenseType?: ExpenseType;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  cuotaNumber?: number | null;
 }

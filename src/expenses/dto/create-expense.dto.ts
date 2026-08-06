@@ -10,6 +10,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+
 import { Recurrence, ExpenseType } from '@prisma/client';
 
 export class CreateExpenseDto {
@@ -52,4 +53,9 @@ export class CreateExpenseDto {
   @IsEnum(ExpenseType)
   @IsOptional()
   expenseType?: ExpenseType;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  cuotaNumber?: number;
 }

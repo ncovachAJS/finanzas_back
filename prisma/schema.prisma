@@ -111,6 +111,7 @@ model Expense {
   categoryId  String?
   category    Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   expenseType ExpenseType @default(VARIABLE)
+  cuotaNumber Int?        // Número de cuota (1, 2, 3…). Se incrementa al propagar.
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
