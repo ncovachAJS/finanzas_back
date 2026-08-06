@@ -2,12 +2,14 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -47,6 +49,30 @@ export class AuthService {
   async me(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     return this.sanitize(user);
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    const data: { name?: string; password?: string } = {};
+
+    if (dto.name) data.name = dto.name;
+
+    if (dto.newPassword) {
+      if (!dto.currentPassword) {
+        throw new BadRequestException('Se requiere la contraseña actual');
+      }
+      const valid = await bcrypt.compare(dto.currentPassword, user.password);
+      if (!valid) throw new UnauthorizedException('Contraseña actual incorrecta');
+      data.password = await bcrypt.hash(dto.newPassword, 10);
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data,
+    });
+
+    return this.sanitize(updated);
   }
 
   private sign(userId: string, email: string) {
