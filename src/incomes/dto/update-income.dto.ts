@@ -27,4 +27,8 @@ export class UpdateIncomeDto {
   @IsBoolean()
   @IsOptional()
   isPaid?: boolean;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
 }
