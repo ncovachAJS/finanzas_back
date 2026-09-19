@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   Min,
   MinLength,
@@ -40,4 +41,8 @@ export class CreateIncomeDto {
   @IsInt()
   @Min(2000)
   year: number;
+
+  @IsUUID()
+  @IsOptional()
+  accountId?: string;
 }

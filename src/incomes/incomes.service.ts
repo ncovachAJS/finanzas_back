@@ -19,6 +19,7 @@ export class IncomesService {
         ...(month !== undefined && { month }),
         ...(year !== undefined && { year }),
       },
+      include: { account: { select: { id: true, name: true } } },
       orderBy: { createdAt: 'asc' },
     });
   }
@@ -34,7 +35,9 @@ export class IncomesService {
         month: dto.month,
         year: dto.year,
         userId,
+        ...(dto.accountId && { accountId: dto.accountId }),
       },
+      include: { account: { select: { id: true, name: true } } },
     });
   }
 
@@ -86,6 +89,7 @@ export class IncomesService {
         month,
         year,
         userId,
+        accountId: r.accountId ?? null,
       })),
     });
 
