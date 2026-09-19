@@ -47,6 +47,7 @@ model Category {
   name      String
   icon      String    @default("📦")
   color     String    @default("#6366F1")
+  budget    Float?
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expenses  Expense[]
