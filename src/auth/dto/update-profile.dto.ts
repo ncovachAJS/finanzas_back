@@ -20,4 +20,8 @@ export class UpdateProfileDto {
   @Min(0)
   @IsOptional()
   monthlyBudget?: number;
+
+  @IsString()
+  @IsOptional()
+  avatar?: string;
 }

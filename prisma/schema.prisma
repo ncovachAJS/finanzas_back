@@ -31,7 +31,8 @@ model User {
   name          String
   email         String        @unique
   password      String
-  monthlyBudget Float?        // Presupuesto mensual global de gastos
+  monthlyBudget Float?
+  avatar        String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   accounts      Account[]

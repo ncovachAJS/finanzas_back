@@ -54,12 +54,13 @@ export class AuthService {
   async updateProfile(userId: string, dto: UpdateProfileDto) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
-    const data: { name?: string; password?: string; monthlyBudget?: number | null } = {};
+    const data: { name?: string; password?: string; monthlyBudget?: number | null; avatar?: string | null } = {};
 
     if (dto.name) data.name = dto.name;
     if (dto.monthlyBudget !== undefined) {
       data.monthlyBudget = dto.monthlyBudget === 0 ? null : dto.monthlyBudget;
     }
+    if (dto.avatar !== undefined) data.avatar = dto.avatar || null;
 
     if (dto.newPassword) {
       if (!dto.currentPassword) {
