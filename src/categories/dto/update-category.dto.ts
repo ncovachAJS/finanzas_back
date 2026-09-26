@@ -1,4 +1,4 @@
-import { IsHexColor, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import { IsBoolean, IsHexColor, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator';
 
 export class UpdateCategoryDto {
   @IsString()
@@ -18,4 +18,8 @@ export class UpdateCategoryDto {
   @Min(0)
   @IsOptional()
   budget?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  quickAdd?: boolean;
 }

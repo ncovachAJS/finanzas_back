@@ -51,6 +51,7 @@ export class CategoriesService {
         icon: dto.icon ?? '📦',
         color: dto.color ?? '#6366F1',
         budget: dto.budget ?? null,
+        quickAdd: dto.quickAdd ?? false,
         userId,
       },
     });
