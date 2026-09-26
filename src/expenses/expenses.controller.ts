@@ -60,11 +60,4 @@ export class ExpensesController {
     return this.expensesService.repeat(req.user.id, id, dto);
   }
 
-  @Post('propagate')
-  propagate(
-    @Request() req,
-    @Body() body: { month: number; year: number },
-  ) {
-    return this.expensesService.propagate(req.user.id, body.month, body.year);
-  }
 }

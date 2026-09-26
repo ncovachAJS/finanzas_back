@@ -221,57 +221,6 @@ export class ExpensesService {
     });
   }
 
-  /// Propaga los gastos recurrentes del mes anterior al mes indicado.
-  async propagate(userId: string, month: number, year: number) {
-    const prevMonth = month === 1 ? 12 : month - 1;
-    const prevYear = month === 1 ? year - 1 : year;
-
-    const accounts = await this.prisma.account.findMany({
-      where: { userId },
-      select: { id: true },
-    });
-    const accountIds = accounts.map((a) => a.id);
-
-    const recurring = await this.prisma.expense.findMany({
-      where: {
-        accountId: { in: accountIds },
-        month: prevMonth,
-        year: prevYear,
-        recurrence: { not: Recurrence.NONE },
-      },
-    });
-
-    const existing = await this.prisma.expense.findMany({
-      where: { accountId: { in: accountIds }, month, year },
-      select: { name: true, accountId: true },
-    });
-    const existingKeys = new Set(existing.map((e) => `${e.accountId}|${e.name}`));
-
-    const toCreate = recurring.filter(
-      (r) => !existingKeys.has(`${r.accountId}|${r.name}`),
-    );
-
-    if (toCreate.length === 0) return { created: 0 };
-
-    await this.prisma.expense.createMany({
-      data: toCreate.map((r) => ({
-        name: r.name,
-        amount: r.amount,
-        recurrence: r.recurrence,
-        isPaid: false,
-        notes: r.notes ?? null,
-        month,
-        year,
-        accountId: r.accountId,
-        categoryId: r.categoryId ?? null,
-        expenseType: r.expenseType ?? ExpenseType.VARIABLE,
-        cuotaNumber: r.cuotaNumber != null ? r.cuotaNumber + 1 : null,
-        totalCuotas: r.totalCuotas ?? null,
-      })),
-    });
-
-    return { created: toCreate.length };
-  }
 
   private async checkOwnership(userId: string, id: string) {
     const expense = await this.prisma.expense.findUnique({

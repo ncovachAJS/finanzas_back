@@ -7,9 +7,12 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
+import { generateRecoveryCode } from '../common/recovery-code';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { RegenerateRecoveryCodeDto } from './dto/regenerate-recovery-code.dto';
 
 @Injectable()
 export class AuthService {
@@ -25,12 +28,55 @@ export class AuthService {
     if (exists) throw new ConflictException('Email ya registrado');
 
     const hashed = await bcrypt.hash(dto.password, 10);
+    const recoveryCode = generateRecoveryCode();
     const user = await this.prisma.user.create({
-      data: { name: dto.name, email: dto.email, password: hashed },
+      data: {
+        name: dto.name,
+        email: dto.email,
+        password: hashed,
+        recoveryCodeHash: await bcrypt.hash(recoveryCode, 10),
+      },
     });
 
     const token = this.sign(user.id, user.email);
-    return { user: this.sanitize(user), token };
+    // El código en claro solo se devuelve aquí; no se guarda en ningún sitio
+    return { user: this.sanitize(user), token, recoveryCode };
+  }
+
+  /// Cambia la contraseña con el código de recuperación (sin sesión). Rota el código.
+  async resetPassword(dto: ResetPasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const invalid = () => new UnauthorizedException('Email o código de recuperación incorrectos');
+    if (!user || !user.recoveryCodeHash) throw invalid();
+
+    const valid = await bcrypt.compare(dto.recoveryCode, user.recoveryCodeHash);
+    if (!valid) throw invalid();
+
+    const recoveryCode = generateRecoveryCode();
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: await bcrypt.hash(dto.newPassword, 10),
+        recoveryCodeHash: await bcrypt.hash(recoveryCode, 10),
+      },
+    });
+
+    const token = this.sign(updated.id, updated.email);
+    return { user: this.sanitize(updated), token, recoveryCode };
+  }
+
+  /// Genera un código de recuperación nuevo (invalida el anterior). Requiere sesión + contraseña.
+  async regenerateRecoveryCode(userId: string, dto: RegenerateRecoveryCodeDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const valid = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!valid) throw new UnauthorizedException('Contraseña actual incorrecta');
+
+    const recoveryCode = generateRecoveryCode();
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { recoveryCodeHash: await bcrypt.hash(recoveryCode, 10) },
+    });
+    return { recoveryCode };
   }
 
   async login(dto: LoginDto) {
@@ -84,7 +130,7 @@ export class AuthService {
   }
 
   private sanitize(user: any) {
-    const { password: _, ...rest } = user;
+    const { password: _p, recoveryCodeHash: _r, ...rest } = user;
     return rest;
   }
 }

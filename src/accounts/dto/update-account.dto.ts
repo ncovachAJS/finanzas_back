@@ -9,5 +9,5 @@ export class UpdateAccountDto {
   @IsNumber()
   @Min(0)
   @IsOptional()
-  budget?: number;
+  budget?: number | null;
 }

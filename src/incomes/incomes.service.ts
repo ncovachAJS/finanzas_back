@@ -174,48 +174,6 @@ export class IncomesService {
     if (account.userId !== userId) throw new ForbiddenException();
   }
 
-  /// Propaga los ingresos recurrentes del mes anterior al mes indicado.
-  /// Solo crea registros que aún no existan (basado en nombre + mes + año).
-  async propagate(userId: string, month: number, year: number) {
-    const prevMonth = month === 1 ? 12 : month - 1;
-    const prevYear = month === 1 ? year - 1 : year;
-
-    const recurring = await this.prisma.income.findMany({
-      where: {
-        userId,
-        month: prevMonth,
-        year: prevYear,
-        recurrence: { not: Recurrence.NONE },
-      },
-    });
-
-    const existing = await this.prisma.income.findMany({
-      where: { userId, month, year },
-      select: { name: true },
-    });
-    const existingNames = new Set(existing.map((i) => i.name));
-
-    const toCreate = recurring.filter((r) => !existingNames.has(r.name));
-
-    if (toCreate.length === 0) return { created: 0 };
-
-    await this.prisma.income.createMany({
-      data: toCreate.map((r) => ({
-        name: r.name,
-        amount: r.amount,
-        recurrence: r.recurrence,
-        isPaid: false,
-        notes: r.notes ?? null,
-        month,
-        year,
-        userId,
-        accountId: r.accountId ?? null,
-      })),
-    });
-
-    return { created: toCreate.length };
-  }
-
   private async checkOwnership(userId: string, id: string) {
     const income = await this.prisma.income.findUnique({ where: { id } });
     if (!income) throw new NotFoundException('Ingreso no encontrado');

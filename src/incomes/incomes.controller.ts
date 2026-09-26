@@ -60,12 +60,4 @@ export class IncomesController {
     return this.incomesService.repeat(req.user.id, id, dto);
   }
 
-  /// Propaga los recurrentes del mes anterior al mes/año indicado.
-  @Post('propagate')
-  propagate(
-    @Request() req,
-    @Body() body: { month: number; year: number },
-  ) {
-    return this.incomesService.propagate(req.user.id, body.month, body.year);
-  }
 }

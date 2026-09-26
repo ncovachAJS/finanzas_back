@@ -17,7 +17,7 @@ export class UpdateCategoryDto {
   @IsNumber()
   @Min(0)
   @IsOptional()
-  budget?: number;
+  budget?: number | null;
 
   @IsBoolean()
   @IsOptional()
