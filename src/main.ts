@@ -13,8 +13,12 @@ async function bootstrap() {
     }),
   );
 
+  // FRONTEND_URL restringe qué webs pueden llamar a la API (admite varias,
+  // separadas por comas, por ejemplo para incluir localhost en desarrollo).
+  // Sin configurar, se admite cualquier origen para no romper nada por defecto.
+  const allowedOrigins = process.env.FRONTEND_URL?.split(',').map((o) => o.trim());
   app.enableCors({
-    origin: '*',
+    origin: allowedOrigins?.length ? allowedOrigins : '*',
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
