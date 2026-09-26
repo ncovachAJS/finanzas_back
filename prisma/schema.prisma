@@ -39,6 +39,7 @@ model User {
   incomes       Income[]
   categories    Category[]
   savingsGoals  SavingsGoal[]
+  investments   Investment[]
 }
 
 /// Categoría de gasto (alimentación, transporte, ocio…)
@@ -120,4 +121,45 @@ model Expense {
   totalCuotas  Int?       // Total de cuotas (ej: 12). Se muestra "Cuota 3 de 12".
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+}
+
+/// Inversión de valor variable (plan de pensiones, fondo…). El valor se actualiza a mano.
+model Investment {
+  id              String                   @id @default(uuid())
+  name            String
+  emoji           String                   @default("📈")
+  isin            String?
+  annualLimit     Float? // Límite de aportación anual (ej. 1500 € en planes de pensiones)
+  baseContributed Float                    @default(0) // Aportado antes de empezar a registrar en la app
+  userId          String
+  user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  valuations      InvestmentValuation[]
+  contributions   InvestmentContribution[]
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+}
+
+/// Valor de una inversión en una fecha. Uno por día.
+model InvestmentValuation {
+  id           String     @id @default(uuid())
+  value        Float
+  date         DateTime   @db.Date
+  investmentId String
+  investment   Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([investmentId, date])
+}
+
+/// Aportación de dinero a una inversión.
+model InvestmentContribution {
+  id           String     @id @default(uuid())
+  amount       Float
+  date         DateTime   @db.Date
+  notes        String?
+  investmentId String
+  investment   Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@index([investmentId, date])
 }
