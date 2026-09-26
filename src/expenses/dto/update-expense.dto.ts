@@ -55,4 +55,9 @@ export class UpdateExpenseDto {
   @Min(1)
   @IsOptional()
   totalCuotas?: number | null;
+
+  /** Aplicar también los cambios a las repeticiones de los meses siguientes */
+  @IsBoolean()
+  @IsOptional()
+  applyToFollowing?: boolean;
 }

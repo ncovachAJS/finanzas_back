@@ -98,8 +98,11 @@ model Income {
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   accountId  String?
   account    Account?   @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  seriesId   String?    // Agrupa las repeticiones creadas juntas (ver "Repetir hasta")
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
+
+  @@index([seriesId])
 }
 
 /// Gasto perteneciente a una cuenta, opcionalmente categorizado.
@@ -116,11 +119,14 @@ model Expense {
   account    Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
   categoryId  String?
   category    Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  seriesId    String?     // Agrupa las repeticiones creadas juntas (ver "Repetir hasta")
   expenseType ExpenseType @default(VARIABLE)
   cuotaNumber  Int?       // Número de cuota (1, 2, 3…). Se incrementa al propagar.
   totalCuotas  Int?       // Total de cuotas (ej: 12). Se muestra "Cuota 3 de 12".
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  @@index([seriesId])
 }
 
 /// Inversión de valor variable (plan de pensiones, fondo…). El valor se actualiza a mano.

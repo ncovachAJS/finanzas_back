@@ -63,4 +63,16 @@ export class CreateExpenseDto {
   @Min(1)
   @IsOptional()
   totalCuotas?: number;
+
+  /** Repetir según la recurrencia hasta este mes/año (incluido) */
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  @IsOptional()
+  repeatUntilMonth?: number;
+
+  @IsInt()
+  @Min(2000)
+  @IsOptional()
+  repeatUntilYear?: number;
 }

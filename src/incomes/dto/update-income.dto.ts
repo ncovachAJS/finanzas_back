@@ -36,4 +36,9 @@ export class UpdateIncomeDto {
   @IsUUID()
   @IsOptional()
   accountId?: string;
+
+  /** Aplicar también los cambios a las repeticiones de los meses siguientes */
+  @IsBoolean()
+  @IsOptional()
+  applyToFollowing?: boolean;
 }
