@@ -7,28 +7,40 @@ export class DashboardService {
 
   /// Stats anuales: por mes, totales, dona por cuenta y por categoría.
   async getYearStats(userId: string, year: number) {
-    const [incomes, expenses, accounts, categories, user] = await Promise.all([
-      this.prisma.income.findMany({ where: { userId, year } }),
-      this.prisma.expense.findMany({
-        where: { account: { userId }, year },
-        include: {
-          account: { select: { id: true, name: true } },
-          category: { select: { id: true, name: true, icon: true, color: true } },
-        },
-      }),
-      this.prisma.account.findMany({
-        where: { userId },
-        select: { id: true, name: true },
-      }),
-      this.prisma.category.findMany({
-        where: { userId },
-        select: { id: true, name: true, icon: true, color: true },
-      }),
-      this.prisma.user.findUnique({
-        where: { id: userId },
-        select: { monthlyBudget: true },
-      }),
-    ]);
+    const [incomes, expenses, accounts, categories, user, priorIncomes, priorExpenses] =
+      await Promise.all([
+        this.prisma.income.findMany({ where: { userId, year } }),
+        this.prisma.expense.findMany({
+          where: { account: { userId }, year },
+          include: {
+            account: { select: { id: true, name: true } },
+            category: { select: { id: true, name: true, icon: true, color: true } },
+          },
+        }),
+        this.prisma.account.findMany({
+          where: { userId },
+          select: { id: true, name: true },
+        }),
+        this.prisma.category.findMany({
+          where: { userId },
+          select: { id: true, name: true, icon: true, color: true },
+        }),
+        this.prisma.user.findUnique({
+          where: { id: userId },
+          select: { monthlyBudget: true },
+        }),
+        // Para arrastrar el ahorro acumulado de años anteriores al cambiar de año
+        this.prisma.income.aggregate({
+          where: { userId, isPaid: true, year: { lt: year } },
+          _sum: { amount: true },
+        }),
+        this.prisma.expense.aggregate({
+          where: { account: { userId }, isPaid: true, year: { lt: year } },
+          _sum: { amount: true },
+        }),
+      ]);
+    const priorYearsSavings =
+      (priorIncomes._sum.amount ?? 0) - (priorExpenses._sum.amount ?? 0);
 
     // Por mes (1-12)
     const months = Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
@@ -113,6 +125,7 @@ export class DashboardService {
       year,
       months,
       accumulatedSavings,
+      priorYearsSavings,
       yearTotalIncomes,
       yearTotalExpenses,
       yearPaidIncomes,
