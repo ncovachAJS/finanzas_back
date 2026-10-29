@@ -37,6 +37,7 @@ model User {
   totpBackupCodeHashes String[]      @default([]) // Códigos de un solo uso por si se pierde el autenticador (hasheados)
   monthlyBudget        Float?
   avatar               String?
+  partnerId            String? // Pareja de gastos compartidos (sin relación de Prisma: solo un id suelto, sin FK)
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   accounts             Account[]
@@ -173,4 +174,37 @@ model InvestmentContribution {
   createdAt    DateTime   @default(now())
 
   @@index([investmentId, date])
+}
+
+/// Gasto compartido a medias entre los dos usuarios emparejados (sin FK a User:
+/// solo ids sueltos, para poder seguir funcionando si uno de los dos se desvincula).
+model SharedExpense {
+  id            String   @id @default(uuid())
+  description   String
+  amount        Float
+  date          DateTime @default(now()) @db.Date
+  paidByUserId  String // quien adelantó el dinero
+  owedByUserId  String // la otra persona, que debe la mitad
+  createdByUserId String
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([paidByUserId])
+  @@index([owedByUserId])
+}
+
+/// Pago registrado para saldar deuda de gastos compartidos entre los dos usuarios.
+model Settlement {
+  id              String   @id @default(uuid())
+  amount          Float
+  fromUserId      String // quien paga
+  toUserId        String // quien recibe
+  note            String?
+  date            DateTime @default(now()) @db.Date
+  createdByUserId String
+  createdAt       DateTime @default(now())
+
+  @@index([fromUserId])
+  @@index([toUserId])
 }

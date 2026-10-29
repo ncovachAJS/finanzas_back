@@ -11,6 +11,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SavingsGoalsModule } from './savings-goals/savings-goals.module';
 import { InvestmentsModule } from './investments/investments.module';
+import { PartnerModule } from './partner/partner.module';
+import { SharedExpensesModule } from './shared-expenses/shared-expenses.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -27,6 +29,8 @@ import { HealthController } from './health.controller';
     CategoriesModule,
     SavingsGoalsModule,
     InvestmentsModule,
+    PartnerModule,
+    SharedExpensesModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: FriendlyThrottlerGuard }],
