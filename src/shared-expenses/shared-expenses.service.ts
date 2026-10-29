@@ -25,21 +25,31 @@ export class SharedExpensesService {
     return user.partnerId;
   }
 
+  /**
+   * groupIdParam === undefined -> combinado (todos los grupos + general, cada item con su groupName)
+   * groupIdParam === 'general' -> solo el cubo general
+   * groupIdParam === '<id>'    -> solo ese grupo
+   */
   async findAll(userId: string, groupIdParam?: string) {
     const partnerId = await this.requirePartnerId(userId);
-    const groupId = !groupIdParam || groupIdParam === 'general' ? null : groupIdParam;
-    await this.groups.checkGroupAccess(userId, groupId);
+    const combined = groupIdParam === undefined;
+    const groupId = combined ? undefined : groupIdParam === 'general' ? null : groupIdParam;
+    if (!combined) await this.groups.checkGroupAccess(userId, groupId);
+    const groupFilter = combined ? {} : { groupId };
+
     const [partner, expenses, settlements] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: partnerId },
         select: { id: true, name: true, email: true, avatar: true },
       }),
       this.prisma.sharedExpense.findMany({
-        where: { groupId, OR: [{ paidByUserId: userId }, { owedByUserId: userId }] },
+        where: { ...groupFilter, OR: [{ paidByUserId: userId }, { owedByUserId: userId }] },
+        include: combined ? { group: true } : undefined,
         orderBy: { date: 'desc' },
       }),
       this.prisma.settlement.findMany({
-        where: { groupId, OR: [{ fromUserId: userId }, { toUserId: userId }] },
+        where: { ...groupFilter, OR: [{ fromUserId: userId }, { toUserId: userId }] },
+        include: combined ? { group: true } : undefined,
         orderBy: { date: 'desc' },
       }),
     ]);
@@ -53,7 +63,7 @@ export class SharedExpensesService {
     }
 
     const items = [
-      ...expenses.map((e) => ({
+      ...expenses.map((e: any) => ({
         type: 'expense' as const,
         id: e.id,
         description: e.description,
@@ -62,8 +72,10 @@ export class SharedExpensesService {
         date: e.date,
         createdAt: e.createdAt,
         iPaid: e.paidByUserId === userId,
+        groupId: e.groupId,
+        groupName: combined ? (e.group?.name ?? 'General') : undefined,
       })),
-      ...settlements.map((s) => ({
+      ...settlements.map((s: any) => ({
         type: 'settlement' as const,
         id: s.id,
         amount: s.amount,
@@ -71,6 +83,8 @@ export class SharedExpensesService {
         date: s.date,
         createdAt: s.createdAt,
         iPaid: s.fromUserId === userId,
+        groupId: s.groupId,
+        groupName: combined ? (s.group?.name ?? 'General') : undefined,
       })),
     ].sort((a, b) => b.date.getTime() - a.date.getTime() || b.createdAt.getTime() - a.createdAt.getTime());
 
