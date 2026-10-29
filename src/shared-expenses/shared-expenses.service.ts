@@ -5,13 +5,17 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { SharedGroupsService } from '../shared-groups/shared-groups.service';
 import { CreateSharedExpenseDto } from './dto/create-shared-expense.dto';
 import { UpdateSharedExpenseDto } from './dto/update-shared-expense.dto';
 import { SettleDto } from './dto/settle.dto';
 
 @Injectable()
 export class SharedExpensesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly groups: SharedGroupsService,
+  ) {}
 
   private async requirePartnerId(userId: string): Promise<string> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -21,19 +25,21 @@ export class SharedExpensesService {
     return user.partnerId;
   }
 
-  async findAll(userId: string) {
+  async findAll(userId: string, groupIdParam?: string) {
     const partnerId = await this.requirePartnerId(userId);
+    const groupId = !groupIdParam || groupIdParam === 'general' ? null : groupIdParam;
+    await this.groups.checkGroupAccess(userId, groupId);
     const [partner, expenses, settlements] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: partnerId },
         select: { id: true, name: true, email: true, avatar: true },
       }),
       this.prisma.sharedExpense.findMany({
-        where: { OR: [{ paidByUserId: userId }, { owedByUserId: userId }] },
+        where: { groupId, OR: [{ paidByUserId: userId }, { owedByUserId: userId }] },
         orderBy: { date: 'desc' },
       }),
       this.prisma.settlement.findMany({
-        where: { OR: [{ fromUserId: userId }, { toUserId: userId }] },
+        where: { groupId, OR: [{ fromUserId: userId }, { toUserId: userId }] },
         orderBy: { date: 'desc' },
       }),
     ]);
@@ -73,12 +79,15 @@ export class SharedExpensesService {
 
   async create(userId: string, dto: CreateSharedExpenseDto) {
     const partnerId = await this.requirePartnerId(userId);
+    const groupId = dto.groupId ?? null;
+    await this.groups.checkGroupAccess(userId, groupId);
     return this.prisma.sharedExpense.create({
       data: {
         description: dto.description,
         amount: dto.amount,
         date: dto.date ? new Date(dto.date) : new Date(),
         notes: dto.notes,
+        groupId,
         paidByUserId: dto.paidByMe ? userId : partnerId,
         owedByUserId: dto.paidByMe ? partnerId : userId,
         createdByUserId: userId,
@@ -108,11 +117,14 @@ export class SharedExpensesService {
 
   async settle(userId: string, dto: SettleDto) {
     const partnerId = await this.requirePartnerId(userId);
+    const groupId = dto.groupId ?? null;
+    await this.groups.checkGroupAccess(userId, groupId);
     return this.prisma.settlement.create({
       data: {
         amount: dto.amount,
         date: dto.date ? new Date(dto.date) : new Date(),
         note: dto.note,
+        groupId,
         fromUserId: dto.iPaid ? userId : partnerId,
         toUserId: dto.iPaid ? partnerId : userId,
         createdByUserId: userId,

@@ -16,4 +16,9 @@ export class SettleDto {
   @IsString()
   @IsOptional()
   note?: string;
+
+  /** null/ausente = cubo "General" */
+  @IsString()
+  @IsOptional()
+  groupId?: string;
 }

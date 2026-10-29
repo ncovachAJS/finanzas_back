@@ -176,35 +176,59 @@ model InvestmentContribution {
   @@index([investmentId, date])
 }
 
+/// Grupo para organizar gastos compartidos (ej: "Viaje a Roma"), dentro de la
+/// misma pareja vinculada. userAId/userBId son los dos miembros, sin orden fijo.
+model SharedGroup {
+  id              String          @id @default(uuid())
+  name            String
+  userAId         String
+  userBId         String
+  createdByUserId String
+  createdAt       DateTime        @default(now())
+  expenses        SharedExpense[]
+  settlements     Settlement[]
+
+  @@index([userAId])
+  @@index([userBId])
+}
+
 /// Gasto compartido a medias entre los dos usuarios emparejados (sin FK a User:
 /// solo ids sueltos, para poder seguir funcionando si uno de los dos se desvincula).
+/// groupId null = cubo "General" (gastos sin agrupar).
 model SharedExpense {
-  id            String   @id @default(uuid())
-  description   String
-  amount        Float
-  date          DateTime @default(now()) @db.Date
-  paidByUserId  String // quien adelantó el dinero
-  owedByUserId  String // la otra persona, que debe la mitad
+  id              String       @id @default(uuid())
+  description     String
+  amount          Float
+  date            DateTime     @default(now()) @db.Date
+  paidByUserId    String // quien adelantó el dinero
+  owedByUserId    String // la otra persona, que debe la mitad
   createdByUserId String
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  notes           String?
+  groupId         String?
+  group           SharedGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   @@index([paidByUserId])
   @@index([owedByUserId])
+  @@index([groupId])
 }
 
 /// Pago registrado para saldar deuda de gastos compartidos entre los dos usuarios.
+/// groupId null = cubo "General".
 model Settlement {
-  id              String   @id @default(uuid())
+  id              String       @id @default(uuid())
   amount          Float
   fromUserId      String // quien paga
   toUserId        String // quien recibe
   note            String?
-  date            DateTime @default(now()) @db.Date
+  date            DateTime     @default(now()) @db.Date
   createdByUserId String
-  createdAt       DateTime @default(now())
+  groupId         String?
+  group           SharedGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt       DateTime     @default(now())
 
   @@index([fromUserId])
   @@index([toUserId])
+  @@index([groupId])
 }

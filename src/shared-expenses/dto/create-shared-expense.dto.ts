@@ -28,4 +28,9 @@ export class CreateSharedExpenseDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  /** null/ausente = cubo "General" */
+  @IsString()
+  @IsOptional()
+  groupId?: string;
 }

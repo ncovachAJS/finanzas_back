@@ -12,6 +12,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { SavingsGoalsModule } from './savings-goals/savings-goals.module';
 import { InvestmentsModule } from './investments/investments.module';
 import { PartnerModule } from './partner/partner.module';
+import { SharedGroupsModule } from './shared-groups/shared-groups.module';
 import { SharedExpensesModule } from './shared-expenses/shared-expenses.module';
 import { HealthController } from './health.controller';
 
@@ -30,6 +31,7 @@ import { HealthController } from './health.controller';
     SavingsGoalsModule,
     InvestmentsModule,
     PartnerModule,
+    SharedGroupsModule,
     SharedExpensesModule,
   ],
   controllers: [HealthController],

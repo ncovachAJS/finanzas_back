@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -21,8 +22,8 @@ export class SharedExpensesController {
   constructor(private readonly service: SharedExpensesService) {}
 
   @Get()
-  findAll(@Request() req) {
-    return this.service.findAll(req.user.id);
+  findAll(@Request() req, @Query('groupId') groupId?: string) {
+    return this.service.findAll(req.user.id, groupId);
   }
 
   @Post()
