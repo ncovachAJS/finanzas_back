@@ -30,4 +30,9 @@ export class UpdateSharedExpenseDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  /** "" (cadena vacía) mueve el gasto al cubo "General"; ausente = no se toca el grupo */
+  @IsString()
+  @IsOptional()
+  groupId?: string;
 }

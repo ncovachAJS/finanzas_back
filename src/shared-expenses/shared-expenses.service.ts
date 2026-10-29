@@ -93,7 +93,7 @@ export class SharedExpensesService {
 
   async create(userId: string, dto: CreateSharedExpenseDto) {
     const partnerId = await this.requirePartnerId(userId);
-    const groupId = dto.groupId ?? null;
+    const groupId = dto.groupId || null;
     await this.groups.checkGroupAccess(userId, groupId);
     return this.prisma.sharedExpense.create({
       data: {
@@ -121,6 +121,11 @@ export class SharedExpensesService {
       data.paidByUserId = dto.paidByMe ? userId : partnerId;
       data.owedByUserId = dto.paidByMe ? partnerId : userId;
     }
+    if (dto.groupId !== undefined) {
+      const newGroupId = dto.groupId || null;
+      await this.groups.checkGroupAccess(userId, newGroupId);
+      data.groupId = newGroupId;
+    }
     return this.prisma.sharedExpense.update({ where: { id }, data });
   }
 
@@ -131,7 +136,7 @@ export class SharedExpensesService {
 
   async settle(userId: string, dto: SettleDto) {
     const partnerId = await this.requirePartnerId(userId);
-    const groupId = dto.groupId ?? null;
+    const groupId = dto.groupId || null;
     await this.groups.checkGroupAccess(userId, groupId);
     return this.prisma.settlement.create({
       data: {
