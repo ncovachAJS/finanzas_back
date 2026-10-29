@@ -13,7 +13,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: string; email: string }) {
+  async validate(payload: { sub: string; email: string; twoFactorPending?: boolean }) {
+    // Token temporal del paso intermedio de login con 2FA: no sirve para nada más.
+    if (payload.twoFactorPending) throw new UnauthorizedException();
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });

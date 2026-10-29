@@ -27,20 +27,23 @@ enum ExpenseType {
 }
 
 model User {
-  id               String        @id @default(uuid())
-  name             String
-  email            String        @unique
-  password         String
-  recoveryCodeHash String? // Código para recuperar la cuenta si se olvida la contraseña (hasheado, como la password)
-  monthlyBudget    Float?
-  avatar           String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  accounts         Account[]
-  incomes          Income[]
-  categories       Category[]
-  savingsGoals     SavingsGoal[]
-  investments      Investment[]
+  id                   String        @id @default(uuid())
+  name                 String
+  email                String        @unique
+  password             String
+  recoveryCodeHash     String? // Código para recuperar la cuenta si se olvida la contraseña (hasheado, como la password)
+  totpSecret           String? // Secreto TOTP (base32). Se guarda al activar 2FA; null si está desactivado.
+  totpEnabled          Boolean       @default(false)
+  totpBackupCodeHashes String[]      @default([]) // Códigos de un solo uso por si se pierde el autenticador (hasheados)
+  monthlyBudget        Float?
+  avatar               String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  accounts             Account[]
+  incomes              Income[]
+  categories           Category[]
+  savingsGoals         SavingsGoal[]
+  investments          Investment[]
 }
 
 /// Categoría de gasto (alimentación, transporte, ocio…)

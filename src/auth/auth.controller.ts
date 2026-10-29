@@ -6,6 +6,9 @@ import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RegenerateRecoveryCodeDto } from './dto/regenerate-recovery-code.dto';
+import { EnableTotpDto } from './dto/enable-totp.dto';
+import { DisableTotpDto } from './dto/disable-totp.dto';
+import { VerifyLoginDto } from './dto/verify-login.dto';
 import { JwtGuard } from './guards/jwt.guard';
 
 @Controller('auth')
@@ -37,6 +40,39 @@ export class AuthController {
   @Post('recovery-code/regenerate')
   regenerateRecoveryCode(@Request() req, @Body() dto: RegenerateRecoveryCodeDto) {
     return this.authService.regenerateRecoveryCode(req.user.id, dto);
+  }
+
+  @Throttle({ default: { limit: 8, ttl: 60_000 } })
+  @Post('2fa/verify-login')
+  verifyLogin(@Body() dto: VerifyLoginDto) {
+    return this.authService.verifyLogin(dto);
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('2fa/setup')
+  setupTotp(@Request() req) {
+    return this.authService.setupTotp(req.user.id);
+  }
+
+  @Throttle({ default: { limit: 8, ttl: 60_000 } })
+  @UseGuards(JwtGuard)
+  @Post('2fa/enable')
+  enableTotp(@Request() req, @Body() dto: EnableTotpDto) {
+    return this.authService.enableTotp(req.user.id, dto);
+  }
+
+  @Throttle({ default: { limit: 8, ttl: 60_000 } })
+  @UseGuards(JwtGuard)
+  @Post('2fa/disable')
+  disableTotp(@Request() req, @Body() dto: DisableTotpDto) {
+    return this.authService.disableTotp(req.user.id, dto);
+  }
+
+  @Throttle({ default: { limit: 8, ttl: 60_000 } })
+  @UseGuards(JwtGuard)
+  @Post('2fa/backup-codes/regenerate')
+  regenerateBackupCodes(@Request() req, @Body() dto: DisableTotpDto) {
+    return this.authService.regenerateBackupCodes(req.user.id, dto);
   }
 
   @UseGuards(JwtGuard)

@@ -10,3 +10,11 @@ export function generateRecoveryCode(): string {
   );
   return groups.join('-');
 }
+
+/** Código de un solo uso tipo XXXX-XXXX (~40 bits). Para la tanda de códigos de respaldo del 2FA. */
+export function generateBackupCode(): string {
+  const groups = Array.from({ length: 2 }, () =>
+    Array.from({ length: 4 }, () => ALPHABET[randomInt(ALPHABET.length)]).join(''),
+  );
+  return groups.join('-');
+}
