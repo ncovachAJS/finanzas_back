@@ -144,12 +144,15 @@ export class ExpensesService {
     return { deleted: count };
   }
 
-  /** Copia todos los gastos de un mes a los 12 meses de otro año, como pendientes y sin serie. */
+  /** Copia todos los gastos de un mes a los 12 meses de otro año, como pendientes.
+   *  Las 12 copias de cada gasto comparten seriesId para poder borrarlas (o editarlas)
+   *  todas juntas después, igual que con los gastos recurrentes. */
   async copyMonthToYear(userId: string, dto: CopyMonthDto) {
     const source = await this.findAll(userId, dto.fromMonth, dto.fromYear);
     if (!source.length) return { created: 0 };
-    const rows = source.flatMap((e) =>
-      Array.from({ length: 12 }, (_, i) => ({
+    const rows = source.flatMap((e) => {
+      const seriesId = randomUUID();
+      return Array.from({ length: 12 }, (_, i) => ({
         name: e.name,
         amount: e.amount,
         recurrence: Recurrence.NONE,
@@ -162,9 +165,9 @@ export class ExpensesService {
         expenseType: e.expenseType,
         cuotaNumber: null,
         totalCuotas: null,
-        seriesId: null,
-      })),
-    );
+        seriesId,
+      }));
+    });
     const { count } = await this.prisma.expense.createMany({ data: rows });
     return { created: count };
   }

@@ -103,14 +103,17 @@ export class IncomesService {
     return { deleted: count };
   }
 
-  /** Copia todos los ingresos de un mes a los 12 meses de otro año, como pendientes y sin serie. */
+  /** Copia todos los ingresos de un mes a los 12 meses de otro año, como pendientes.
+   *  Las 12 copias de cada ingreso comparten seriesId para poder borrarlas (o editarlas)
+   *  todas juntas después, igual que con los ingresos recurrentes. */
   async copyMonthToYear(userId: string, dto: CopyMonthDto) {
     const source = await this.prisma.income.findMany({
       where: { userId, month: dto.fromMonth, year: dto.fromYear },
     });
     if (!source.length) return { created: 0 };
-    const rows = source.flatMap((i) =>
-      Array.from({ length: 12 }, (_, idx) => ({
+    const rows = source.flatMap((i) => {
+      const seriesId = randomUUID();
+      return Array.from({ length: 12 }, (_, idx) => ({
         name: i.name,
         amount: i.amount,
         recurrence: Recurrence.NONE,
@@ -120,9 +123,9 @@ export class IncomesService {
         year: dto.toYear,
         userId,
         accountId: i.accountId,
-        seriesId: null,
-      })),
-    );
+        seriesId,
+      }));
+    });
     const { count } = await this.prisma.income.createMany({ data: rows });
     return { created: count };
   }
