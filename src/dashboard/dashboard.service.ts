@@ -29,13 +29,16 @@ export class DashboardService {
           where: { id: userId },
           select: { monthlyBudget: true },
         }),
-        // Para arrastrar el ahorro acumulado de años anteriores al cambiar de año
+        // Para arrastrar el ahorro acumulado de años anteriores al cambiar de año.
+        // No se filtra por isPaid: un año anterior (incluido el año en curso
+        // cuando se mira el siguiente) cuenta por lo previsto, no solo por lo
+        // ya pagado/cobrado hasta hoy, igual que el resto del dashboard anual.
         this.prisma.income.aggregate({
-          where: { userId, isPaid: true, year: { lt: year } },
+          where: { userId, year: { lt: year } },
           _sum: { amount: true },
         }),
         this.prisma.expense.aggregate({
-          where: { account: { userId }, isPaid: true, year: { lt: year } },
+          where: { account: { userId }, year: { lt: year } },
           _sum: { amount: true },
         }),
       ]);
