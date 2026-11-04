@@ -61,6 +61,12 @@ export class IncomesController {
     return this.incomesService.repeat(req.user.id, id, dto);
   }
 
+  /// Cuántos ingresos de meses siguientes se borrarían con scope=following
+  @Get(':id/following-count')
+  followingCount(@Request() req, @Param('id') id: string) {
+    return this.incomesService.followingCount(req.user.id, id);
+  }
+
   /// Copia todos los ingresos de un mes a los 12 meses de otro año
   @Post('copy-month')
   copyMonth(@Request() req, @Body() dto: CopyMonthDto) {

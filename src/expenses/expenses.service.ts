@@ -157,6 +157,13 @@ export class ExpensesService {
     return { deleted: count };
   }
 
+  /** Cuántos gastos de meses siguientes se borrarían con scope=following (sin borrar nada). */
+  async followingCount(userId: string, id: string) {
+    const expense = await this.checkOwnership(userId, id);
+    const following = await this.findFollowing(userId, expense);
+    return { count: following.length };
+  }
+
   /** Copia todos los gastos de un mes a los 12 meses de otro año, como pendientes.
    *  Las 12 copias de cada gasto comparten seriesId para poder borrarlas (o editarlas)
    *  todas juntas después, igual que con los gastos recurrentes. */

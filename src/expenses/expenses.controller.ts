@@ -61,6 +61,12 @@ export class ExpensesController {
     return this.expensesService.repeat(req.user.id, id, dto);
   }
 
+  /// Cuántos gastos de meses siguientes se borrarían con scope=following
+  @Get(':id/following-count')
+  followingCount(@Request() req, @Param('id') id: string) {
+    return this.expensesService.followingCount(req.user.id, id);
+  }
+
   /// Copia todos los gastos de un mes a los 12 meses de otro año
   @Post('copy-month')
   copyMonth(@Request() req, @Body() dto: CopyMonthDto) {

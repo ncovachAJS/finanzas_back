@@ -113,6 +113,13 @@ export class IncomesService {
     return { deleted: count };
   }
 
+  /** Cuántos ingresos de meses siguientes se borrarían con scope=following (sin borrar nada). */
+  async followingCount(userId: string, id: string) {
+    const income = await this.checkOwnership(userId, id);
+    const following = await this.findFollowing(userId, income);
+    return { count: following.length };
+  }
+
   /** Copia todos los ingresos de un mes a los 12 meses de otro año, como pendientes.
    *  Las 12 copias de cada ingreso comparten seriesId para poder borrarlas (o editarlas)
    *  todas juntas después, igual que con los ingresos recurrentes. */
