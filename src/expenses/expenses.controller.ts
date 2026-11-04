@@ -15,6 +15,7 @@ import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { RepeatDto } from '../common/repeat.dto';
+import { CopyMonthDto } from '../common/copy-month.dto';
 
 @UseGuards(JwtGuard)
 @Controller('expenses')
@@ -58,6 +59,12 @@ export class ExpensesController {
   @Post(':id/repeat')
   repeat(@Request() req, @Param('id') id: string, @Body() dto: RepeatDto) {
     return this.expensesService.repeat(req.user.id, id, dto);
+  }
+
+  /// Copia todos los gastos de un mes a los 12 meses de otro año
+  @Post('copy-month')
+  copyMonth(@Request() req, @Body() dto: CopyMonthDto) {
+    return this.expensesService.copyMonthToYear(req.user.id, dto);
   }
 
 }

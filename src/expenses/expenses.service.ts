@@ -10,6 +10,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { RepeatDto } from '../common/repeat.dto';
+import { CopyMonthDto } from '../common/copy-month.dto';
 import {
   RECURRENCE_STEP,
   afterMonth,
@@ -141,6 +142,31 @@ export class ExpensesService {
       where: { id: { in: [id, ...following.map((f) => f.id)] } },
     });
     return { deleted: count };
+  }
+
+  /** Copia todos los gastos de un mes a los 12 meses de otro año, como pendientes y sin serie. */
+  async copyMonthToYear(userId: string, dto: CopyMonthDto) {
+    const source = await this.findAll(userId, dto.fromMonth, dto.fromYear);
+    if (!source.length) return { created: 0 };
+    const rows = source.flatMap((e) =>
+      Array.from({ length: 12 }, (_, i) => ({
+        name: e.name,
+        amount: e.amount,
+        recurrence: Recurrence.NONE,
+        isPaid: false,
+        notes: e.notes,
+        month: i + 1,
+        year: dto.toYear,
+        accountId: e.accountId,
+        categoryId: e.categoryId,
+        expenseType: e.expenseType,
+        cuotaNumber: null,
+        totalCuotas: null,
+        seriesId: null,
+      })),
+    );
+    const { count } = await this.prisma.expense.createMany({ data: rows });
+    return { created: count };
   }
 
   /** Amplía la serie de este gasto hasta el mes indicado, a partir de su última repetición. */

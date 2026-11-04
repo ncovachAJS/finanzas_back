@@ -15,6 +15,7 @@ import { IncomesService } from './incomes.service';
 import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
 import { RepeatDto } from '../common/repeat.dto';
+import { CopyMonthDto } from '../common/copy-month.dto';
 
 @UseGuards(JwtGuard)
 @Controller('incomes')
@@ -58,6 +59,12 @@ export class IncomesController {
   @Post(':id/repeat')
   repeat(@Request() req, @Param('id') id: string, @Body() dto: RepeatDto) {
     return this.incomesService.repeat(req.user.id, id, dto);
+  }
+
+  /// Copia todos los ingresos de un mes a los 12 meses de otro año
+  @Post('copy-month')
+  copyMonth(@Request() req, @Body() dto: CopyMonthDto) {
+    return this.incomesService.copyMonthToYear(req.user.id, dto);
   }
 
 }

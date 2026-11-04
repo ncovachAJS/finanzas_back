@@ -10,6 +10,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
 import { RepeatDto } from '../common/repeat.dto';
+import { CopyMonthDto } from '../common/copy-month.dto';
 import { afterMonth, nextOccurrences } from '../common/series';
 
 const INCLUDE = { account: { select: { id: true, name: true } } };
@@ -100,6 +101,30 @@ export class IncomesService {
       where: { id: { in: [id, ...following.map((f) => f.id)] } },
     });
     return { deleted: count };
+  }
+
+  /** Copia todos los ingresos de un mes a los 12 meses de otro año, como pendientes y sin serie. */
+  async copyMonthToYear(userId: string, dto: CopyMonthDto) {
+    const source = await this.prisma.income.findMany({
+      where: { userId, month: dto.fromMonth, year: dto.fromYear },
+    });
+    if (!source.length) return { created: 0 };
+    const rows = source.flatMap((i) =>
+      Array.from({ length: 12 }, (_, idx) => ({
+        name: i.name,
+        amount: i.amount,
+        recurrence: Recurrence.NONE,
+        isPaid: false,
+        notes: i.notes,
+        month: idx + 1,
+        year: dto.toYear,
+        userId,
+        accountId: i.accountId,
+        seriesId: null,
+      })),
+    );
+    const { count } = await this.prisma.income.createMany({ data: rows });
+    return { created: count };
   }
 
   /** Amplía la serie de este ingreso hasta el mes indicado, a partir de su última repetición. */
