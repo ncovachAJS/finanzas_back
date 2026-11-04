@@ -134,6 +134,19 @@ export class ExpensesService {
   /** scope 'following' borra también las repeticiones de los meses siguientes. */
   async remove(userId: string, id: string, scope?: string) {
     const expense = await this.checkOwnership(userId, id);
+    if (scope === 'series') {
+      if (!expense.seriesId) {
+        return this.prisma.expense.delete({ where: { id } });
+      }
+      const accounts = await this.prisma.account.findMany({
+        where: { userId },
+        select: { id: true },
+      });
+      const { count } = await this.prisma.expense.deleteMany({
+        where: { seriesId: expense.seriesId, accountId: { in: accounts.map((a) => a.id) } },
+      });
+      return { deleted: count };
+    }
     if (scope !== 'following') {
       return this.prisma.expense.delete({ where: { id } });
     }

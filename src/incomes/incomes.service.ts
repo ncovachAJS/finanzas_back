@@ -90,9 +90,19 @@ export class IncomesService {
     return { ...updated, updatedFollowing: following.length };
   }
 
-  /** scope 'following' borra también las repeticiones de los meses siguientes. */
+  /** scope 'following' borra también las repeticiones de los meses siguientes.
+   *  scope 'series' borra todas las de la misma serie, sin importar el mes. */
   async remove(userId: string, id: string, scope?: string) {
     const income = await this.checkOwnership(userId, id);
+    if (scope === 'series') {
+      if (!income.seriesId) {
+        return this.prisma.income.delete({ where: { id } });
+      }
+      const { count } = await this.prisma.income.deleteMany({
+        where: { userId, seriesId: income.seriesId },
+      });
+      return { deleted: count };
+    }
     if (scope !== 'following') {
       return this.prisma.income.delete({ where: { id } });
     }
