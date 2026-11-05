@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   Min,
   MinLength,
 } from 'class-validator';
@@ -21,6 +22,17 @@ export class UpdateExpenseDto {
   @Min(0)
   @IsOptional()
   amount?: number;
+
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  @IsOptional()
+  month?: number;
+
+  @IsInt()
+  @Min(2000)
+  @IsOptional()
+  year?: number;
 
   @IsEnum(Recurrence)
   @IsOptional()

@@ -1,10 +1,12 @@
 import {
   IsBoolean,
   IsEnum,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   Min,
   MinLength,
 } from 'class-validator';
@@ -20,6 +22,17 @@ export class UpdateIncomeDto {
   @Min(0)
   @IsOptional()
   amount?: number;
+
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  @IsOptional()
+  month?: number;
+
+  @IsInt()
+  @Min(2000)
+  @IsOptional()
+  year?: number;
 
   @IsEnum(Recurrence)
   @IsOptional()
