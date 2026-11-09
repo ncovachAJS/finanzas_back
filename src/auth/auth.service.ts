@@ -211,11 +211,20 @@ export class AuthService {
   async updateProfile(userId: string, dto: UpdateProfileDto) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
-    const data: { name?: string; password?: string; monthlyBudget?: number | null; avatar?: string | null } = {};
+    const data: {
+      name?: string;
+      password?: string;
+      monthlyBudget?: number | null;
+      monthlySavingsGoal?: number | null;
+      avatar?: string | null;
+    } = {};
 
     if (dto.name) data.name = dto.name;
     if (dto.monthlyBudget !== undefined) {
       data.monthlyBudget = dto.monthlyBudget === 0 ? null : dto.monthlyBudget;
+    }
+    if (dto.monthlySavingsGoal !== undefined) {
+      data.monthlySavingsGoal = dto.monthlySavingsGoal === 0 ? null : dto.monthlySavingsGoal;
     }
     if (dto.avatar !== undefined) data.avatar = dto.avatar || null;
 

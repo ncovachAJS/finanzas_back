@@ -21,6 +21,11 @@ export class UpdateProfileDto {
   @IsOptional()
   monthlyBudget?: number;
 
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  monthlySavingsGoal?: number;
+
   @IsString()
   @IsOptional()
   avatar?: string;
