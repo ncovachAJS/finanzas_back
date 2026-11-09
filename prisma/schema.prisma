@@ -37,6 +37,8 @@ model User {
   totpBackupCodeHashes String[]      @default([]) // Códigos de un solo uso por si se pierde el autenticador (hasheados)
   monthlyBudget        Float?
   monthlySavingsGoal   Float? // Objetivo de ahorro mensual (ingresos - gastos deseados), para el Dashboard
+  lastAutoSavingsMonth Int? // Último mes (1-12) ya procesado por el ahorro automático a la Cuenta Ahorro
+  lastAutoSavingsYear  Int?
   avatar               String?
   partnerId            String? // Pareja de gastos compartidos (sin relación de Prisma: solo un id suelto, sin FK)
   createdAt            DateTime      @default(now())

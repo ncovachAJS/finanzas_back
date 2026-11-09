@@ -38,4 +38,10 @@ export class AccountsController {
   remove(@Request() req, @Param('id') id: string) {
     return this.accountsService.remove(req.user.id, id);
   }
+
+  /// Añade a la Cuenta Ahorro (si existe) el ahorro de los meses ya cerrados pendientes de procesar
+  @Post('process-auto-savings')
+  processAutoSavings(@Request() req) {
+    return this.accountsService.processAutoSavings(req.user.id);
+  }
 }
