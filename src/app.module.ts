@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from './prisma/prisma.module';
 import { FriendlyThrottlerGuard } from './common/friendly-throttler.guard';
 import { AuthModule } from './auth/auth.module';
@@ -14,6 +15,7 @@ import { InvestmentsModule } from './investments/investments.module';
 import { PartnerModule } from './partner/partner.module';
 import { SharedGroupsModule } from './shared-groups/shared-groups.module';
 import { SharedExpensesModule } from './shared-expenses/shared-expenses.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -21,6 +23,7 @@ import { HealthController } from './health.controller';
     // Límite general por IP; los endpoints sensibles (login, registro…) tienen uno
     // más estricto propio con @Throttle en su controlador.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     AccountsModule,
@@ -33,6 +36,7 @@ import { HealthController } from './health.controller';
     PartnerModule,
     SharedGroupsModule,
     SharedExpensesModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: FriendlyThrottlerGuard }],

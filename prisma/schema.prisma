@@ -48,6 +48,21 @@ model User {
   categories           Category[]
   savingsGoals         SavingsGoal[]
   investments          Investment[]
+  pushSubscriptions    PushSubscription[]
+}
+
+/// Suscripción push del navegador (una por dispositivo/navegador donde el
+/// usuario activó notificaciones). endpoint es único por dispositivo.
+model PushSubscription {
+  id        String   @id @default(uuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 /// Categoría de gasto (alimentación, transporte, ocio…)
