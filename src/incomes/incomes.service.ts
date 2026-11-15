@@ -45,6 +45,7 @@ export class IncomesService {
         amount: dto.amount,
         recurrence,
         isPaid: dto.isPaid ?? false,
+        paidDate: dto.isPaid ? new Date() : null,
         notes: dto.notes ?? null,
         month: dto.month,
         year: dto.year,
@@ -68,6 +69,11 @@ export class IncomesService {
     const { applyToFollowing, ...data } = dto;
     if (data.accountId && data.accountId !== income.accountId) {
       await this.checkAccountOwnership(userId, data.accountId);
+    }
+    // Guarda el día en que se marca como cobrado (para el calendario); si se
+    // desmarca, se borra para que no quede un día de cobro que ya no es tal.
+    if (data.isPaid !== undefined && data.isPaid !== income.isPaid) {
+      (data as Record<string, unknown>).paidDate = data.isPaid ? new Date() : null;
     }
     const updated = await this.prisma.income.update({
       where: { id },
