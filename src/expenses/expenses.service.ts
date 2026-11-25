@@ -63,6 +63,7 @@ export class ExpensesService {
 
   async create(userId: string, dto: CreateExpenseDto) {
     await this.checkAccountOwnership(userId, dto.accountId);
+    if (dto.sharedExpenseId) await this.checkSharedExpenseOwnership(userId, dto.sharedExpenseId);
     const recurrence = dto.recurrence ?? Recurrence.NONE;
     const repeat =
       recurrence !== Recurrence.NONE && !!dto.repeatUntilMonth && !!dto.repeatUntilYear;
@@ -82,6 +83,7 @@ export class ExpensesService {
         cuotaNumber: dto.cuotaNumber ?? null,
         totalCuotas: dto.totalCuotas ?? null,
         seriesId: repeat ? randomUUID() : null,
+        sharedExpenseId: dto.sharedExpenseId ?? null,
       },
       include: INCLUDE,
     });
@@ -293,5 +295,11 @@ export class ExpensesService {
     });
     if (!account) throw new NotFoundException('Cuenta no encontrada');
     if (account.userId !== userId) throw new ForbiddenException();
+  }
+
+  private async checkSharedExpenseOwnership(userId: string, sharedExpenseId: string) {
+    const shared = await this.prisma.sharedExpense.findUnique({ where: { id: sharedExpenseId } });
+    if (!shared) throw new NotFoundException('Gasto compartido no encontrado');
+    if (shared.createdByUserId !== userId) throw new ForbiddenException();
   }
 }

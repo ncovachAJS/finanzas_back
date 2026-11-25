@@ -50,6 +50,12 @@ export class CreateExpenseDto {
   @IsOptional()
   categoryId?: string;
 
+  /** Id del SharedExpense ya creado en Split, si este gasto se añadió también
+   *  como gasto compartido (switch del modal de gasto). */
+  @IsUUID()
+  @IsOptional()
+  sharedExpenseId?: string;
+
   @IsEnum(ExpenseType)
   @IsOptional()
   expenseType?: ExpenseType;

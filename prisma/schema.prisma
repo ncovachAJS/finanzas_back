@@ -150,6 +150,10 @@ model Expense {
   expenseType ExpenseType @default(VARIABLE)
   cuotaNumber Int? // Número de cuota (1, 2, 3…). Se incrementa al propagar.
   totalCuotas Int? // Total de cuotas (ej: 12). Se muestra "Cuota 3 de 12".
+  // Si este gasto se añadió también como gasto compartido (switch "Split" al crearlo),
+  // aquí queda el enlace para poder mostrar un icono distintivo en la lista de gastos.
+  sharedExpenseId String?        @unique
+  sharedExpense    SharedExpense? @relation(fields: [sharedExpenseId], references: [id], onDelete: SetNull)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -229,6 +233,7 @@ model SharedExpense {
   group           SharedGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  expense         Expense? // reverso de Expense.sharedExpenseId (si se creó desde el switch de un gasto)
 
   @@index([paidByUserId])
   @@index([owedByUserId])
