@@ -18,7 +18,8 @@ enum Recurrence {
 
 enum ExpenseType {
   FIXED // Gasto fijo (alquiler, suscripciones)
-  VARIABLE // Gasto variable (compras, ocio)
+  VARIABLE // Gasto variable (compras)
+  LEISURE // Ocio (también los gastos rápidos del botón ＋)
   DEBT // Deuda / préstamo
   DONATION // Donación
   INVESTMENT // Inversión
