@@ -200,52 +200,6 @@ export class ExpensesService {
     return { created: count };
   }
 
-  /** Enlaza gastos ya existentes (de antes de guardar sharedExpenseId al crear)
-   *  con el gasto compartido que probablemente generaron, emparejando por
-   *  mismo nombre/importe y creados casi al mismo instante (ambos se crean
-   *  en la misma acción de guardar, con segundos de diferencia como mucho).
-   *  Idempotente: solo mira gastos y gastos compartidos todavía sin enlazar. */
-  async linkSharedExpensesRetroactively(userId: string) {
-    const accounts = await this.prisma.account.findMany({
-      where: { userId },
-      select: { id: true },
-    });
-    const accountIds = accounts.map((a) => a.id);
-    const unlinkedExpenses = await this.prisma.expense.findMany({
-      where: { accountId: { in: accountIds }, sharedExpenseId: null },
-    });
-    const candidates = await this.prisma.sharedExpense.findMany({
-      where: { createdByUserId: userId, paidByUserId: userId, expense: null },
-    });
-
-    const FIVE_MIN_MS = 5 * 60 * 1000;
-    const used = new Set<string>();
-    let linked = 0;
-    for (const exp of unlinkedExpenses) {
-      const matches = candidates.filter(
-        (se) =>
-          !used.has(se.id) &&
-          se.amount === exp.amount &&
-          se.description.trim().toLowerCase() === exp.name.trim().toLowerCase() &&
-          Math.abs(se.createdAt.getTime() - exp.createdAt.getTime()) < FIVE_MIN_MS,
-      );
-      if (!matches.length) continue;
-      matches.sort(
-        (a, b) =>
-          Math.abs(a.createdAt.getTime() - exp.createdAt.getTime()) -
-          Math.abs(b.createdAt.getTime() - exp.createdAt.getTime()),
-      );
-      const best = matches[0];
-      used.add(best.id);
-      await this.prisma.expense.update({
-        where: { id: exp.id },
-        data: { sharedExpenseId: best.id },
-      });
-      linked++;
-    }
-    return { linked, checkedExpenses: unlinkedExpenses.length, checkedShared: candidates.length };
-  }
-
   /** Amplía la serie de este gasto hasta el mes indicado, a partir de su última repetición. */
   async repeat(userId: string, id: string, dto: RepeatDto) {
     const expense = await this.checkOwnership(userId, id);

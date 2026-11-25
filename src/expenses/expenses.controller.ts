@@ -73,10 +73,4 @@ export class ExpensesController {
     return this.expensesService.copyMonthToYear(req.user.id, dto);
   }
 
-  /// Enlaza retroactivamente gastos ya existentes con el gasto compartido que
-  /// probablemente generaron (de antes de que ese enlace se guardara al crear).
-  @Post('link-shared-retroactive')
-  linkSharedRetroactive(@Request() req) {
-    return this.expensesService.linkSharedExpensesRetroactively(req.user.id);
-  }
 }
